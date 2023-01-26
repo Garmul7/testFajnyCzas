@@ -14,7 +14,6 @@ const Home = ({ ourEvents }: Props) => {
   const [currentPage, setCurrentPage] = useState(1);
   var { width, pageSize, reverseFlow } = useWindowDimensions();
 
-  console.log(ourEvents)
   if(reverseFlow){pageSize=5};
   
   const onPageChange = (page: number) => {
