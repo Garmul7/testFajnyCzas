@@ -1,86 +1,69 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
+import Row from '../components/Row'
+import EventType from '../typings.d'
+import Pagination from '../components/Pagination'
+import { useEffect, useState } from 'react'
+import useWindowDimensions from '../utils/useWindowDimensions'
 
-const Home: NextPage = () => {
+interface Props {
+  ourEvents: EventType[]
+}
+
+const Home = ({ ourEvents }: Props) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  var { width, pageSize, reverseFlow } = useWindowDimensions();
+
+  console.log(ourEvents)
+  if(reverseFlow){pageSize=5};
+  
+  const onPageChange = (page: number) => {
+    setCurrentPage(page);
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
+    <div className="relative h-screen ">
       <Head>
-        <title>Create Next App</title>
+        <title>First test</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
+      <main className="relative p-[20px]">
 
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="rounded-md bg-gray-100 p-3 font-mono text-lg">
-            pages/index.tsx
-          </code>
-        </p>
+        <section>
+          Pagination
+          <Row events={paginate(ourEvents, currentPage, pageSize)} screenWidth={width} reverseFlow={reverseFlow}></Row>
+          <Pagination items={ourEvents} pageSize={pageSize} currentPage={currentPage} onPageChange={onPageChange}></Pagination>
+        </section>
 
-        <div className="mt-6 flex max-w-4xl flex-wrap items-center justify-around sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and its API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
       </main>
-
-      <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center gap-2"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-        </a>
-      </footer>
     </div>
   )
 }
 
 export default Home
+
+
+export async function getServerSideProps() {
+  const res = await fetch(`https://az9zpuog20.execute-api.eu-central-1.amazonaws.com/v1.0/public/search?provider=Atena+Fabryka+Przyg%C3%B3d&sort=published_at_desc&limit=30`)
+  const jsonres = await res.json()
+  const ourEvents = jsonres.data
+  
+  if(!ourEvents){
+    return {
+      notFound: true,
+    }
+  }
+
+  return {
+    props: {ourEvents},
+  }
+}
+
+
+function paginate(items: EventType[], pageNumber: number, pageSize: number){
+  const startIndex = (pageNumber - 1) * pageSize;
+  return items.slice(startIndex, startIndex + pageSize);
+}
+
+
